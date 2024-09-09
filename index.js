@@ -35,7 +35,7 @@ async function dev() {
             console.log('server is runing' + process.env.PORT );
         })
 
-        // await updateAllTeachersData(); 
+        await updateAllTeachersData(); 
     } catch (error) {
         console.log(error.message);
     }
@@ -55,7 +55,7 @@ dev()
     app.get('/updateTeachers',async (req, res) => {
         // const users = await Applications.find().populate('user').lean()
         //  console.log(users);
-
+console.log('keldi');
         await updateAllTeachersData(); 
             res.json({
                 message: 'update',

@@ -13,8 +13,8 @@ app.use(express.json())
 require('./src/bot/bot')
 
 const job = new CronJob(
-	'10 * * * * *', // cronTime
-    // '0 59 23 * * *',
+	// '10 * * * * *', // cronTime
+    '0 59 * * * *',
 	async () => {
         await updateAllTeachersData(); 
       }, // onTick
@@ -52,13 +52,13 @@ dev()
 //             })
 //     })
 
-//     app.get('/updateOperators',async (req, res) => {
-//         // const users = await Applications.find().populate('user').lean()
-//         //  console.log(users);
+    app.get('/updateTeachers',async (req, res) => {
+        // const users = await Applications.find().populate('user').lean()
+        //  console.log(users);
 
-//         await updateAllOperatorDate(); 
-//             res.json({
-//                 message: 'update',
+        await updateAllTeachersData(); 
+            res.json({
+                message: 'update',
                 
-//                 })
-//         })
+                })
+        })

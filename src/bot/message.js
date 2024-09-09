@@ -19,18 +19,19 @@ bot.on('message' ,  async msg => {
     if(Teacherfind) {
         chooseTeacher( msg)
     }
+    
+    if(text == '/logout' ){
+        logout(msg)
+    }
 
 
 
-    if(teacher) {
+    if(teacher && text != '/start' && text != '/logout') {
 
         if(teacher.action == 'confirm_password' ){
             confirmPassword(msg)
         }
 
-        if(text == '/logout' ){
-            logout(msg)
-        }
         if(teacher.action == 'choose_language') {
             chooseLanguage(msg)
         }
@@ -43,8 +44,10 @@ bot.on('message' ,  async msg => {
         }
 
 
-        if(teacher.action == 'menu') {
-            confirmationLesson(msg)
+        if(teacher.action == 'menu' && text != '/start'   ) {
+    // if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
+        confirmationLesson(msg)
+    // }
             // findStudentsInGroup(msg)
         }
         

@@ -459,7 +459,7 @@ const  sendExcelAttendanceRecords = async(msg) => {
     const groupId = findTeacher.action.split('&')[1]
     const findGroup = await Groups.findOne({_id: groupId}).lean()
     const findAttendances = await AttendanceRecords.find({teacher: findTeacher._id, group: groupId}).populate('teacher').populate('group').populate('student').lean()
-    console.log(findAttendances);
+    console.log(findAttendances, 'Attendence');
     const sheetReadAttendanceRecords = await readSheets('attendanceRecords','A:A')
     console.log(sheetReadAttendanceRecords);
     const  writeRow= sheetReadAttendanceRecords ? `A${sheetReadAttendanceRecords?.length + 1}` : 'A1'

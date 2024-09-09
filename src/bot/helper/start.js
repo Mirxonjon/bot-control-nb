@@ -5,91 +5,88 @@ const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTe
 
 const  start = async( msg ) => {
     const chatId = msg.from.id
+const findTeacher = await Teacher.findOne({chatId: chatId})
+console.log(findTeacher);
+    if(findTeacher){
+        findTeacher.action = 'menu'
 
-    let  teachers =  await Teacher.find().lean()
+        await Teacher.findByIdAndUpdate(findTeacher._id,findTeacher,{new:true})
 
-    let keyboardTeachers =await listTeachersInArray(teachers)
+        const findGroupsOfTeacher = await Groups.find({teacher: findTeacher._id}).lean() 
+       const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher)
+         return    bot.sendMessage(chatId , `Menyuni tanlang` ,
+        {      reply_markup : {
+            
+            keyboard :[
+                       ...keyboardGroups,
+                       [
+                        {
+                            text: `Tilni o'zgartirish`,
+                        }
+                       ]
+                     ],
+            resize_keyboard: true
+        }})
+    } else {
+        let  teachers =  await Teacher.find().lean()
 
+        let keyboardTeachers =await listTeachersInArray(teachers)
+    
+    
+        bot.sendMessage(
+            chatId,
+            `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
+            {
+                reply_markup: {
+                    keyboard: 
+                      keyboardTeachers
+                    ,
+                    resize_keyboard: true
+                }
+            })
+    
+    }
 
-    bot.sendMessage(
-        chatId,
-        `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
-        {
-            reply_markup: {
-                keyboard: 
-                  keyboardTeachers
-                ,
-                resize_keyboard: true
-            }
-        })
-
-
-    // if(checkUser?.full_name && checkUser?.language && checkUser?.sharePhone && checkUser.status ) {
-
-    //     await User.findByIdAndUpdate(checkUser._id,{...checkUser ,  action:  'menu'  },{new:true})
-
-    //     bot.sendMessage(chatId, checkUser.language == 'uz' ? `Menyuni tanlang, ${checkUser.admin ? 'Admin': checkUser.full_name}`: `Выберите меню, ${checkUser.admin ? 'Admin': checkUser.full_name}`,{
-    //         reply_markup: {
-    //             keyboard: checkUser.admin ? (checkUser.language == 'uz' ? adminKeyboardUZ : adminKeyboardRu)  : (checkUser.language=='uz' ? userKeyboardUz : userKeyboardRU) ,
-    //             resize_keyboard: true
-    //         },
-    //     })
-    // }else if(checkUser && checkUser.status == false){
-        
-    //     // if(checkUser.action == 'choose_language') {
-    //     //     chooseLanguage(msg)
-    //     // }
-    //     // if(checkUser.action == 'add_idRMO') {
-    //     //    idRMO(msg)
-    //     // }
-    //     // if(checkUser.action == 'add_name') {
-    //     //     // addName(msg)
-    //     //    idRMO(msg)
-    //     // }
-    //     // if(checkUser.action == 'request_contact') {
-    //     //     requestContact(msg)
-    //     // }
-    //     // if(checkUser.action == 'retry_request_contact') {
-    //     //     retryrequestContact(msg)
-    //     // }
-    // }else if (!checkUser) {
-    //     let newUser = new User({
-    //         chatId,
-    //         admin: false,
-    //         createdAt: new Date(),
-    //         action: 'choose_language'
-    //     })
-    //     await newUser.save()
-    //     bot.sendMessage(
-    //         chatId,
-    //         `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
-    //         {
-    //             reply_markup: {
-    //                 keyboard: [
-    //                     [
-    //                         {
-    //                             text: `🇺🇿 O‘zbekcha` ,
-    //                         },
-    //                         {
-    //                             text: `🇷🇺  Русский` ,
-    //                         },
-    //                     ],
-    //                 ],
-    //                 resize_keyboard: true
-    //             }
-    //         })
-    // }
 
 
 }
 const logout = async (msg) => {
     const chatId = msg.from.id
-    let user = await User.findOne({chatId}).lean()
+    let teacher = await Teacher.findOne({chatId}).lean()
 
     try {
-        await User.deleteOne({chatId})
-        bot.sendMessage(chatId ,  user.language == 'uz' ? 'Botdan butunlay chiqib kettingiz, qayta faollashtirish uchun /start ni bosing.' : 'Вы полностью отключились из бота, перейдите в /start для возобновления.')
-        
+        // await User.deleteOne({chatId})
+        if(teacher){
+            await Teacher.findByIdAndUpdate(teacher._id,{chatId: null})
+            bot.sendMessage(chatId ,  'Botdan butunlay chiqib kettingiz, qayta faollashtirish uchun /start ni bosing.' ,{
+                reply_markup:{
+                    remove_keyboard:true
+                }
+            })
+        }else {
+            bot.sendMessage(chatId ,  'Siz ro\'yhatdan otmagansiz. ' ,{
+                reply_markup:{
+                    remove_keyboard:true
+                }
+            })
+        }
+
+        // let  teachers =  await Teacher.find().lean()
+
+        // let keyboardTeachers =await listTeachersInArray(teachers)
+    
+    
+        // bot.sendMessage(
+        //     chatId,
+        //     `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
+        //     {
+        //         reply_markup: {
+        //             keyboard: 
+        //               keyboardTeachers
+        //             ,
+        //             resize_keyboard: true
+        //         }
+        //     })
     } catch (error) {
         console.log(error);
     }

@@ -1,18 +1,19 @@
+const groups = require("../../model/groups")
 const Teachers = require("../../model/teachers")
 const { bot } = require("../bot")
-const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU } = require("../menu/keyboard")
+const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listGroupsInArray } = require("../menu/keyboard")
 
 const changeLanguage = async (msg) => {
     const chatId = msg.from.id
-    let user = await Teachers.findOne({chatId}).lean()
+    let teacher = await Teachers.findOne({chatId}).lean()
 
-    user.action = 'choose_new_language'
+    teacher.action = 'choose_new_language'
 
-    await Teachers.findByIdAndUpdate(user._id,user,{new:true})
+    await Teachers.findByIdAndUpdate(teacher._id,teacher,{new:true})
 
     bot.sendMessage(
         chatId,
-         user.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` :  `Выберите язык 🇷🇺/🇺🇿`,
+         teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` :  `Выберите язык 🇷🇺/🇺🇿`,
         {
             reply_markup: {
                 keyboard: [
@@ -34,23 +35,32 @@ const chooseNewLanguage = async(msg) => {
     const chatId = msg.from.id
     const text = msg.text
 
-    let user = await Teachers.findOne({chatId}).lean()
-    
+    let teacher = await Teachers.findOne({chatId}).lean()
+        console.log(text ,`🇷🇺  Русский` == text  );
     if(`🇺🇿 O‘zbekcha` == text || `🇷🇺  Русский` == text ) {
-        user.language = text  == `🇺🇿 O‘zbekcha` ? 'uz' : 'ru' 
-        user.action = 'menu'
+        teacher.language = text  == `🇺🇿 O‘zbekcha` ? 'uz' : 'ru' 
+        teacher.action = 'menu'
         
-        await Teachers.findByIdAndUpdate(user._id,user,{new:true})
-        bot.sendMessage(chatId, user.language == 'uz' ? `Menyuni tanlang, ${user.admin ? 'Admin': user.full_name}`: `Выберите меню, ${user.admin ? 'Admin': user.full_name}`,{
+        await Teachers.findByIdAndUpdate(teacher._id,teacher,{new:true})
+        const findGroupsOfTeacher = await groups.find({teacher: teacher._id}).lean() 
+        const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher)
+        bot.sendMessage(chatId, teacher.language == 'uz' ? `Menyuni tanlang` : `Выберите меню`,{
             reply_markup: {
-                keyboard: user.admin ? user.language == 'uz' ? adminKeyboardUZ :adminKeyboardRu  : user.language=='uz' ? userKeyboardUz : userKeyboardRU ,
+                keyboard:[
+                    ...keyboardGroups,
+                    [
+                     {
+                         text: teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
+                     }
+                    ]
+                  ],
                 resize_keyboard: true
             },
         })
     } else {
         bot.sendMessage(
             chatId,
-            user.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` :  `Выберите язык 🇷🇺/🇺🇿`,
+            teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` :  `Выберите язык 🇷🇺/🇺🇿`,
             {
                 reply_markup: {
                     keyboard: [

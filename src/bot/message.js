@@ -11,6 +11,7 @@ bot.on('message' ,  async msg => {
 
 
     const teacher = await  Teachers.findOne({chatId}).lean() 
+    const findNotAccess = Teachers.findOne({chatIdNotAccess: chatId}).lean()
     console.log(teacher);
     if(text == '/start' || text == 'Menyu' || text == 'Меню' ){
         start(msg)
@@ -24,17 +25,16 @@ bot.on('message' ,  async msg => {
         logout(msg)
     }
 
+    if(findNotAccess){
+        if(teacher.action == 'confirm_password' ){
+            confirmPassword(msg)
+        }
+    }
+
 
 
     if(teacher && text != '/start' && text != '/logout') {
 
-        if(teacher.action == 'confirm_password' ){
-            confirmPassword(msg)
-        }
-
-        if(teacher.action == 'choose_language') {
-            chooseLanguage(msg)
-        }
         if(teacher?.action?.split('&')[0] == 'attendance_record' ) {
             sendExcelAttendanceRecords(msg)
         }
@@ -44,11 +44,15 @@ bot.on('message' ,  async msg => {
         }
 
 
-        if(teacher.action == 'menu' && text != '/start'   ) {
+        if(teacher.action == 'menu' && text != '/start'  && text != '🇷🇺/🇺🇿 Tilni o‘zgartirish' && text != '🇷🇺/🇺🇿 Сменить язык'   ) {
     // if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
-        confirmationLesson(msg)
+        // confirmationLesson(msg)
     // }
             // findStudentsInGroup(msg)
+        }
+
+        if(teacher.action == 'choose_new_language') {
+            chooseNewLanguage(msg)
         }
         
         if(text == `🇷🇺/🇺🇿 Tilni o‘zgartirish` || text == `🇷🇺/🇺🇿 Сменить язык`) {

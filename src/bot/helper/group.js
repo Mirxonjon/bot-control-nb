@@ -4,7 +4,7 @@ const Groups = require("../../model/groups")
 const Students = require("../../model/students")
 const Teacher = require("../../model/teachers")
 const { writeToSheet, readSheets } = require("../../utils/google_cloud")
-const { formatDate } = require("../../utils/time")
+const { formatDate, formatTime } = require("../../utils/time")
 const { bot } = require("../bot")
 const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTeachersInArray, listGroupsInArray } = require("../menu/keyboard")
 
@@ -14,8 +14,11 @@ const confirmationLesson = async (msg) => {
     const text = msg.text
     // const splitText = text.split(' - ')
     const findTeacher = await Teacher.findOne({chatId}).lean()
-    const textHtml = `<b> ${text} </b>
-    Вы уверены, что хотите подтвердить урок?
+    const textHtmlru = `<b> ${text} </b>
+Вы уверены что хотите начать урок?
+    `
+    const textHtmluz = `<b> ${text} </b>
+Haqiqatan ham darsni boshlamoqchimisiz?
     `
     let resultMessage =  await  bot.sendMessage( chatId, textHtml,
         {
@@ -50,16 +53,20 @@ const findStudentsInGroup = async (query) => {
 
     const findTeacher = await Teacher.findOne({chatId}).lean()
     // await Teacher.findByIdAndUpdate(findTeacher._id,{action: 'attendance_record'},{new:true})
-    if(queryAnswer[1]){
+    if(queryAnswer[1] == 'true'){
         const findGroup = await Groups.findOne({level: splitText[0], days: splitText[1], time: splitText[2] , room: splitText[3], teacher: findTeacher._id}).lean()
         const findStudents = await Students.find({group: findGroup?._id}).lean()
         const startLesson = new Date()
         await bot.deleteMessage(chatId, +messageId)
          for(let e of findStudents) {
           let   textHtml = `<b>👤 ${e?.full_name}</b> - <b>${e.age}</b>
- 📞 <i>${e?.number}</i> | <i>${e?.number_second}</i>
+ 📞 <i>${e?.number}</i> 
+ 📞 <i>${e?.number_second}</i>
+
  ${e?.type == 'ACTIVE' ?'🟩':'🟥'}<b>${e?.type}</b>  🗓<i>${e?.attemt_day}</i>
              `
+
+
               await  bot.sendMessage( chatId, textHtml,
                               {
                                  parse_mode :'HTML',
@@ -532,12 +539,33 @@ await bot.deleteMessage(chatId, --message_id)
     Teacher.findByIdAndUpdate(findTeacherAdmin._id,{action: 'menu'},{new:true})
 }   
 
+const sendNotification = async() => {
+    // const findTeachers = await Teacher.find({}).lean()
+    const findGroups = await Groups.find({}).populate('teacher').lean()
+    console.log(findGroups,findGroups.length , 'FindGroups');
+    const FormatTime = formatTime(new Date())
+    for(let e of findGroups) {
+        console.log(e.time, FormatTime, e.time == FormatTime );
+        // console.log();
 
+        if(e.time == FormatTime) {
+            const text = e.teacher.language == 'uz' ?  `🤩Darsni boshlash vaqti keldi ! 
+✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
+` : `🤩Пришло время начать урок ! 
+✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
+`
+            bot.sendMessage(e.teacher.chatId, text , {
+                
+            })
+        }
+    }
+}
 module.exports = {
     confirmationLesson,
     findStudentsInGroup,
     addAttendance,
     sendExcelAttendanceRecords,
     addAttendanceAdmin,
-    writeMessage
+    writeMessage,
+    sendNotification
 }

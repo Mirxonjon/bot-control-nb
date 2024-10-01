@@ -21,7 +21,7 @@ console.log(findTeacher);
                        ...keyboardGroups,
                        [
                         {
-                            text: `Tilni o'zgartirish`,
+                            text: findTeacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
                         }
                        ]
                      ],
@@ -35,7 +35,7 @@ console.log(findTeacher);
     
         bot.sendMessage(
             chatId,
-            `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
+            `Assalomu aleykum ${msg.from.first_name} , Xodimni tanlang.`,
             {
                 reply_markup: {
                     keyboard: 
@@ -99,8 +99,8 @@ const  chooseTeacher = async ( msg) => {
     let teacher = await Teacher.findOne({full_name: text}).lean()
     
     
-    teacher.action = 'confirm_password'
-    teacher.chatId = chatId
+    teacher.actionNotAccess = 'confirm_password'
+    teacher.chatIdNotAccess = chatId
     await Teacher.findByIdAndUpdate(teacher._id,teacher,{new:true})
     bot.sendMessage(chatId , `${teacher.full_name} parolni kiriting` ,{      reply_markup : {
         keyboard :[
@@ -121,19 +121,23 @@ const confirmPassword = async (msg) => {
 
     if(teacher.password == text) {
         teacher.action = 'menu'
+        teacher.chatId = chatId,
+        teacher.chatIdNotAccess = null,
+        teacher.chatIdNotAccess = null
+
 
         await Teacher.findByIdAndUpdate(teacher._id,teacher,{new:true})
 
         const findGroupsOfTeacher = await Groups.find({teacher: teacher._id}).lean() 
        const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher)
-         bot.sendMessage(chatId , `Menyuni tanlang` ,
+         bot.sendMessage(chatId ,teacher.language == 'uz' ?  `✅ Roʻyxatdan oʻtish muvaffaqiyatli yakunlandi!` : `✅ Ваща регистрация успешно завершена!` ,
         {      reply_markup : {
             
             keyboard :[
                        ...keyboardGroups,
                        [
                         {
-                            text: `Tilni o'zgartirish`,
+                            text: teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
                         }
                        ]
                      ],
@@ -149,7 +153,7 @@ const confirmPassword = async (msg) => {
             await Teacher.findByIdAndUpdate(teacher._id,teacher,{new:true})
           return  bot.sendMessage(
                 chatId,
-                `Здравствуйте ${msg.from.first_name} ,  добро пожаловать в наш бот. Выберите язык 🇷🇺/🇺🇿`,
+                ` Xodimni tanlang.`,
                 {
                     reply_markup: {
                         keyboard: keyboardTeachers
@@ -176,45 +180,6 @@ const confirmPassword = async (msg) => {
 
 
 
-const  chooseLanguage = async (msg) => {
-    const chatId = msg.from.id
-    const text =  msg.text
-    let user = await User.findOne({chatId}).lean()
-    if(`🇺🇿 O‘zbekcha` == text || `🇷🇺  Русский` == text ) {
-        user.language = text  == `🇺🇿 O‘zbekcha` ? 'uz' : 'ru' 
-        user.action = 'add_idRMO'
-
-
-        await User.findByIdAndUpdate(user._id,user,{new:true})
-            bot.sendMessage(
-                chatId,
-                user.language == 'uz' ? `👤 Operator ID raqamingizni kiriting (Misol uchun: 123)` : `👤 Введите операторский ID номер (Например: 123)`,
-                {
-                    reply_markup : {
-                        remove_keyboard : true
-                    }
-                })
-    } else {
-        bot.sendMessage(
-            chatId,
-            `Выберите язык 🇷🇺/🇺🇿`,
-            {
-                reply_markup: {
-                    keyboard: [
-                        [
-                            {
-                                text: `🇺🇿 O‘zbekcha` ,
-                            },
-                            {
-                                text: `🇷🇺  Русский` ,
-                            },
-                        ],
-                    ],
-                    resize_keyboard: true
-                }
-            })
-    }
-    }
 
 
 
@@ -225,5 +190,4 @@ module.exports = {
     logout,
     chooseTeacher,
     confirmPassword,
-    chooseLanguage,
 }

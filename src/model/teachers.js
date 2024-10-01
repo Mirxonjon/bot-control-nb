@@ -9,8 +9,13 @@ const Teacher = new Schema({
         type: Boolean,
         default: false
     },
-    action: String, 
-    language: String,
+    action: String,
+    chatIdNotAccess:Number, 
+    actionNotAccess: String,
+    language: {
+        type :String ,
+        default : 'uz'
+    },
     // applications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Applications' }],
     startLesson: Date,
     updateAt: Date,

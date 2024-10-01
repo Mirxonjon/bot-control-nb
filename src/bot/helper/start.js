@@ -117,8 +117,8 @@ const  chooseTeacher = async ( msg) => {
 const confirmPassword = async (msg) => {
     const chatId = msg.from.id
     const text =  msg.text
-    let teacher = await Teacher.findOne({chatId}).lean()
-
+    let teacher = await Teacher.findOne({chatIdNotAccess: chatId}).lean()
+console.log(teacher, 'lllll');
     if(teacher.password == text) {
         teacher.action = 'menu'
         teacher.chatId = chatId,

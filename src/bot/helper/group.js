@@ -9,7 +9,7 @@ const { bot } = require("../bot")
 const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTeachersInArray, listGroupsInArray } = require("../menu/keyboard")
 
 
-const confirmationLesson = async (msg) => {
+const confirmationLessons = async (msg) => {
     const chatId = msg.from.id 
     const text = msg.text
     // const splitText = text.split(' - ')
@@ -561,7 +561,7 @@ const sendNotification = async() => {
     }
 }
 module.exports = {
-    confirmationLesson,
+    confirmationLessons,
     findStudentsInGroup,
     addAttendance,
     sendExcelAttendanceRecords,

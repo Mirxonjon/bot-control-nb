@@ -1,6 +1,6 @@
 const Teachers = require('../model/teachers')
 const {bot} = require('./bot')
-const { findStudentsInGroup, sendExcelAttendanceRecords, confirmationLesson, writeMessage } = require('./helper/group')
+const { findStudentsInGroup, sendExcelAttendanceRecords, confirmationLessons, writeMessage } = require('./helper/group')
 // const { getAlltime, addApplication, addDayOffFirst, addDayOffSecond, addComment, sentApplication, showApplication, SentMessagetoUser, addSupervazer } = require('./helper/application')
 const { chooseNewLanguage, changeLanguage } = require('./helper/language')
 const { start, chooseLanguage , logout, chooseTeacher, confirmPassword } = require('./helper/start')
@@ -11,14 +11,14 @@ bot.on('message' ,  async msg => {
 
 
     const teacher = await  Teachers.findOne({chatId}).lean() 
-    const findNotAccess = Teachers.findOne({chatIdNotAccess: chatId}).lean()
-    console.log(teacher);
+    const findNotAccess = await Teachers.findOne({chatIdNotAccess: chatId}).lean()
+    console.log(teacher , findNotAccess, 'okkk');
     if(text == '/start' || text == 'Menyu' || text == 'Меню' ){
         start(msg)
     }
     const Teacherfind = await  Teachers.findOne({full_name: text}).lean() 
     if(Teacherfind) {
-        chooseTeacher( msg)
+        chooseTeacher(msg)
     }
     
     if(text == '/logout' ){
@@ -26,7 +26,9 @@ bot.on('message' ,  async msg => {
     }
 
     if(findNotAccess){
-        if(teacher?.action == 'confirm_password' ){
+        
+        if(findNotAccess?.actionNotAccess == 'confirm_password' ){
+            console.log('kirdi');
             confirmPassword(msg)
         }
     }
@@ -45,9 +47,10 @@ bot.on('message' ,  async msg => {
 
 
         if(teacher.action == 'menu' && text != '/start'  && text != '🇷🇺/🇺🇿 Tilni o‘zgartirish' && text != '🇷🇺/🇺🇿 Сменить язык'   ) {
-    // if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
-        // confirmationLesson(msg)
-    // }
+    if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
+        console.log('keldi');
+        confirmationLessons(msg)
+    }
             // findStudentsInGroup(msg)
         }
 

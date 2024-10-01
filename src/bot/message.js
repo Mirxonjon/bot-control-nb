@@ -26,7 +26,7 @@ bot.on('message' ,  async msg => {
     }
 
     if(findNotAccess){
-        if(teacher.action == 'confirm_password' ){
+        if(teacher?.action == 'confirm_password' ){
             confirmPassword(msg)
         }
     }

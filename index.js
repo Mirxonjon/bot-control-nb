@@ -36,7 +36,7 @@ async function dev() {
             console.log('server is runing' + process.env.PORT );
         })
     //    await sendNotification()
-
+    await updateAllTeachersData(); 
         // await updateAllTeachersData(); 
     } catch (error) {
         console.log(error.message);

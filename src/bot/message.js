@@ -1,6 +1,6 @@
 const Teachers = require('../model/teachers')
 const {bot} = require('./bot')
-const { findStudentsInGroup, sendExcelAttendanceRecords, confirmationLessons, writeMessage } = require('./helper/group')
+const {confirmationLesson, sendExcelAttendanceRecords, writeMessage, findStudentsInGroup,   } = require('./helper/group')
 // const { getAlltime, addApplication, addDayOffFirst, addDayOffSecond, addComment, sentApplication, showApplication, SentMessagetoUser, addSupervazer } = require('./helper/application')
 const { chooseNewLanguage, changeLanguage } = require('./helper/language')
 const { start, chooseLanguage , logout, chooseTeacher, confirmPassword } = require('./helper/start')
@@ -45,12 +45,18 @@ bot.on('message' ,  async msg => {
             // findStudentsInGroup(msg)
         }
 
+        if(teacher.action == 'menu') {
+                confirmationLesson(msg)
 
+        }
+
+        
         if(teacher.action == 'menu' && text != '/start'  && text != '🇷🇺/🇺🇿 Tilni o‘zgartirish' && text != '🇷🇺/🇺🇿 Сменить язык'   ) {
-    if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
-        console.log('keldi');
-        confirmationLessons(msg)
-    }
+            // if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
+                // confirmationLesson(msg)
+        // confirmationLessons(msg)
+        // console.log('keldi');
+    // }
             // findStudentsInGroup(msg)
         }
 

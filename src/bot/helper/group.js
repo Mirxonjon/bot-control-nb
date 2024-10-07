@@ -9,10 +9,10 @@ const { bot } = require("../bot")
 const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTeachersInArray, listGroupsInArray } = require("../menu/keyboard")
 
 
-const confirmationLessons = async (msg) => {
-    const chatId = msg.from.id 
+const confirmationLesson = async (msg) => {
+    const chatId = msg?.from.id 
     const text = msg.text
-    // const splitText = text.split(' - ')
+    const splitText = text.split(' - ')
     const findTeacher = await Teacher.findOne({chatId}).lean()
     const textHtmlru = `<b> ${text} </b>
 Вы уверены что хотите начать урок?
@@ -20,7 +20,7 @@ const confirmationLessons = async (msg) => {
     const textHtmluz = `<b> ${text} </b>
 Haqiqatan ham darsni boshlamoqchimisiz?
     `
-    let resultMessage =  await  bot.sendMessage( chatId, textHtml,
+    await  bot.sendMessage( chatId, findTeacher?.language == 'uz' ? textHtmluz : textHtmlru,
         {
            parse_mode :'HTML',
            reply_markup: {
@@ -561,7 +561,8 @@ const sendNotification = async() => {
     }
 }
 module.exports = {
-    confirmationLessons,
+    // confirmationLessons,
+    confirmationLesson,
     findStudentsInGroup,
     addAttendance,
     sendExcelAttendanceRecords,

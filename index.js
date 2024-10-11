@@ -13,17 +13,24 @@ app.use(express.json())
 require('./src/bot/bot')
 
 const job = new CronJob(
-	'10 * * * * *', // cronTime
-    // '0 59 * * * *' ,
-	async () => {
-        // await updateAllTeachersData(); 
-        // sendNotification()
-      }, // onTick
-	null, // onComplete
-	true, // start
-	'Asia/Tashkent' // timeZone
+    '0 * * * *', // Run at the 0th minute of every hour
+    async () => {
+        sendNotification()
+    }, // onTick
+    null, // onComplete
+    true, // start
+    'Asia/Tashkent' // timeZone
+);
 
 
+const Updatedate = new CronJob(
+    '0 0 * * *', // Run every day at 00:00 (midnight)
+    async () => {
+        await updateAllTeachersData();
+    }, // onTick
+    null, // onComplete
+    true, // start
+    'Asia/Tashkent' // timeZone
 );
 // const dt = cron.sendAt('* * * * *');
 

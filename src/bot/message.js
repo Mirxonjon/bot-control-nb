@@ -1,9 +1,11 @@
 const Teachers = require('../model/teachers')
 const {bot} = require('./bot')
-const {confirmationLesson, sendExcelAttendanceRecords, writeMessage, findStudentsInGroup,   } = require('./helper/group')
+const { sendExcelAttendanceRecords, writeMessage, findStudentsInGroup, confirmationLesson, groupUnits,    } = require('./helper/groups')
 // const { getAlltime, addApplication, addDayOffFirst, addDayOffSecond, addComment, sentApplication, showApplication, SentMessagetoUser, addSupervazer } = require('./helper/application')
-const { chooseNewLanguage, changeLanguage } = require('./helper/language')
+const { chooseNewLanguage, changeLanguage  } = require('./helper/language')
 const { start, chooseLanguage , logout, chooseTeacher, confirmPassword } = require('./helper/start')
+
+// const { confirmationLesson1 } = require('./helper/group');
 
 bot.on('message' ,  async msg => {
     const chatId = msg.from.id
@@ -45,19 +47,23 @@ bot.on('message' ,  async msg => {
             // findStudentsInGroup(msg)
         }
 
-        if(teacher.action == 'menu') {
-                confirmationLesson(msg)
+        // if(teacher.action == 'menu') {
+        //         confirmationLesson(msg)
 
-        }
+        // }
 
         
-        if(teacher.action == 'menu' && text != '/start'  && text != '🇷🇺/🇺🇿 Tilni o‘zgartirish' && text != '🇷🇺/🇺🇿 Сменить язык'   ) {
+        if(teacher.action == 'menu' && text != '/start'  && text != '🇷🇺/🇺🇿 Tilni o‘zgartirish' && text != '🇷🇺/🇺🇿 Сменить язык' && text != `Units` && text!= `🇷🇺  Русский` && text != `🇺🇿 O‘zbekcha`) {
             // if(text != '/start' || text != 'Menyu' || text != 'Меню' ){
-                // confirmationLesson(msg)
+                confirmationLesson(msg)
         // confirmationLessons(msg)
         // console.log('keldi');
     // }
             // findStudentsInGroup(msg)
+        }
+
+        if(teacher.action == 'menu' && text == 'Units') {
+            groupUnits(msg)
         }
 
         if(teacher.action == 'choose_new_language') {

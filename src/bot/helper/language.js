@@ -49,6 +49,11 @@ const chooseNewLanguage = async(msg) => {
                 keyboard:[
                     ...keyboardGroups,
                     [
+                        {
+                            text: teacher.language == 'uz' ? `Units` : `Units`,
+                        }
+                       ],
+                    [
                      {
                          text: teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
                      }
@@ -79,7 +84,43 @@ const chooseNewLanguage = async(msg) => {
     }
 }
 
+const confirmationLesson = async (msg) => {
+    const chatId = msg?.from.id 
+    const text = msg.text
+    const splitText = text.split(' - ')
+    const findTeacher = await Teachers.findOne({chatId}).lean()
+    const textHtmlru = `<b> ${text} </b>
+Вы уверены что хотите начать урок?
+    `
+    const textHtmluz = `<b> ${text} </b>
+Haqiqatan ham darsni boshlamoqchimisiz?
+    `
+
+
+    await  bot.sendMessage( chatId, findTeacher?.language == 'uz' ? textHtmluz : textHtmlru,
+        {
+           parse_mode :'HTML',
+           reply_markup: {
+             remove_keyboard: true,
+             inline_keyboard : [
+               [
+                   {
+                       text: '✅',
+                       callback_data : `confirmL_true_${text}`
+                        
+                   },
+                   {
+                       text: '❌' ,
+                       callback_data : `confirmL_false_${text}`
+                   }
+               ]
+           ],
+           },
+         });
+}
+
 module.exports = {
+    // confirmationLesson,
     changeLanguage,
     chooseNewLanguage
 }

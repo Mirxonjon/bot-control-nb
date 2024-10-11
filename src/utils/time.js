@@ -67,17 +67,21 @@ function formatDate(date) {
 
 
 const updateAllTeachersData = async () => {
-  const allTeachers = await readSheets('BOT','M:O')
-  const allTeachersAndGroups = await readSheets('BOT','A:K')
+  const allTeachers = await readSheets('BOT','P:R2')
+  const allGroups = await readSheets('GROUPS','A:G2')
+  const allStudents = await readSheets('STUDENTS','A:H2')
+  
+  console.log(allStudents.length);
+  console.log(allTeachers.length);
+  console.log(allGroups.length);
   if(allTeachers?.length) {
     console.log('All teachers', allTeachers);
 
 
   for(let e of allTeachers) {
     if(e.length) {
-      let findTeacher = await Teachers.findOne({ full_name: e[0] }).lean();
+      let findTeacher = await Teachers.findOne({ sheet_id: e[1] }).lean();
       if(findTeacher){
-         await findAndUpdateOrCreateGroups(findTeacher,allTeachersAndGroups)
          const isAdmin = e[2] == 'admin' ? true : false
         if(e[1] != findTeacher.password ||  isAdmin != findTeacher.admin) {
           await Teachers.findByIdAndUpdate(findTeacher._id,{password : e[1] , admin: e[2] == 'admin' ? true : false ,updateAt : new Date()},{new:true})
@@ -85,72 +89,97 @@ const updateAllTeachersData = async () => {
       } else {
         console.log('Teacher create');
         let newTeacher = new Teachers({
+          sheet_id : e[1] ,
           full_name : e[0],
           password : e[1],
           admin: e[2] == 'admin' ? true : false,
           createdAt: new Date(),
         })
-        const  createTeacher = await newTeacher.save()
-        await findAndUpdateOrCreateGroups(createTeacher,allTeachersAndGroups)
+        await newTeacher.save()
+        // await findAndUpdateOrCreateGroups(createTeacher,allTeachersAndGroups)
 
       }
   }
-}
+} 
+await findAndUpdateOrCreateGroups(allGroups,allStudents)
   } else {
     console.log('No teachers');
   }
 
+//  await findAndUpdateOrCreateGroups(allGroups)
+//  await findAndUpdateOrCreateStudents(allStudents)
+
 }
 
-const findAndUpdateOrCreateStudents = async (i ,findGroup) => {
+const findAndUpdateOrCreateStudents = async (allStudents) => {
+if(allStudents?.length) {
+  for(let e of allStudents) {
+    console.log(e);
 
-  let findStudent = await Students.findOne({group: findGroup._id,full_name: i[5],age: i[6],number: i[7],}).lean()
-  console.log(findStudent, 'Find student');
+      let  findStudent = await Students.findOne({sheet_id : e[1]}).lean()
+      if(findStudent) {
+        console.log(e);
+        if(findStudent.number_second != e[5] || findStudent.attemt_day != e[6] || findStudent.type != e[7]) {
+          await Students.findByIdAndUpdate(findStudent._id,{
+            full_name : e[2],
+            age : e[3],
+            number : e[4],
+            number_second : e[5],
+            attemt_day : e[6],
+            type : e[7],
+            group: findGroup._id,
+            createdAt: new Date(),
+          },{new:true})
+        }
 
-  if(findStudent) {
-    if(findStudent.number_second != i[8] || findStudent.attemt_day != i[9] || findStudent.type != i[10]) {
-      await Students.findByIdAndUpdate(findStudent._id,{number_second : i[8] , attemt_day : i[9] , type : i[10]},{new:true})
-    }
-  } else {
-
-    let newStudent = new Students({
-      full_name : i[5],
-      age : i[6],
-      number : i[7],
-      number_second : i[8],
-      attemt_day : i[9],
-      type : i[10],
-      group: findGroup._id,
-      createdAt: new Date(),
-    })
-
-    const result = await newStudent.save()
-  }
-}
-
-const findAndUpdateOrCreateGroups = async (findTeacher,allTeachersAndGroups) => {
-  for(let i of allTeachersAndGroups) {
-    if(findTeacher.full_name == i[4]){
-      let  findGroup = await Groups.findOne({level: i[0],room: i[1],time: i[2],days: i[3],teacher: findTeacher._id}).lean()
-      if(findGroup) {
-        console.log(i);
-       await findAndUpdateOrCreateStudents(i,findGroup)
       }else{
+        let  findGroup = await Groups.findOne({sheet_id : e[0]}).lean()
+
+        let newStudent = new Students({
+          sheet_id : e[1],
+          full_name : e[2],
+          age : e[3],
+          number : e[4],
+          number_second : e[5],
+          attemt_day : e[6],
+          type : e[7],
+          group: findGroup._id,
+          createdAt: new Date(),
+        })
+       await newStudent.save()
+              }
+    
+  }
+
+}
+}
+
+const findAndUpdateOrCreateGroups = async (AllGroups,allStudents) => {
+  for(let e of AllGroups) {
+    // console.log(e);
+      let  findGroup = await Groups.findOne({sheet_id : e[0]}).lean()
+      if(findGroup) {
+        console.log(e);
+      await Groups.findByIdAndUpdate(findGroup._id,{level : e[2] ,room: e[3] , time :e[4] , days: e[5]},{new:true})
+      //  await findAndUpdateOrCreateStudents(i,findGroup)
+      }else{
+        let findTeacher = await Teachers.findOne({ sheet_id: e[1] }).lean();
+ 
         let newGoup = new Groups({
-          level : i[0],
-           room: i[1],
-           time: i[2],
-           days: i[3],
+          sheet_id : e[0],
+          level : e[2],
+           room: e[3],
+           time: e[4],
+           days: e[5],
            teacher: findTeacher._id,
            createdAt: new Date(),
          })
-        let  createGroup = await newGoup.save()
-           await findAndUpdateOrCreateStudents(i , createGroup)
+        await newGoup.save()
               }
-              // console.log(findGroup, 'Find Group');;
-            }
     
   }
+ await findAndUpdateOrCreateStudents(allStudents)
+
 }
 
 

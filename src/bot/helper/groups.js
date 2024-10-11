@@ -3,10 +3,10 @@ const AttendanceRecordsAdmin = require("../../model/attendanceRecordsAdmin")
 const Groups = require("../../model/groups")
 const Students = require("../../model/students")
 const Teacher = require("../../model/teachers")
+const { bot } = require("../bot")
 const { writeToSheet, readSheets } = require("../../utils/google_cloud")
 const { formatDate, formatTime } = require("../../utils/time")
-const { bot } = require("../bot")
-const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTeachersInArray, listGroupsInArray } = require("../menu/keyboard")
+const { adminKeyboardUZ, adminKeyboardRu, userKeyboardUz, userKeyboardRU, listTeachersInArray, listGroupsInArray, listGroups } = require("../menu/keyboard")
 
 
 const confirmationLesson = async (msg) => {
@@ -20,6 +20,8 @@ const confirmationLesson = async (msg) => {
     const textHtmluz = `<b> ${text} </b>
 Haqiqatan ham darsni boshlamoqchimisiz?
     `
+
+
     await  bot.sendMessage( chatId, findTeacher?.language == 'uz' ? textHtmluz : textHtmlru,
         {
            parse_mode :'HTML',
@@ -41,6 +43,153 @@ Haqiqatan ham darsni boshlamoqchimisiz?
            },
          });
 }
+
+const groupUnits = async (msg) => {
+    const chatId = msg?.from.id 
+    const text = msg.text
+    const splitText = text.split(' - ')
+    const findTeacher = await Teacher.findOne({chatId}).lean()
+    const groups = await Groups.find({teacher : findTeacher._id}).lean()
+    const AllTeacherGroups = await listGroups(groups)
+    console.log(AllTeacherGroups);
+
+    for(let e of AllTeacherGroups) {
+        const textHtmlru = `<b> ${e.text} </b>
+        Вы уверены что хотите начать урок?
+            `
+            const textHtmluz = `<b> ${e.text} </b>
+        Guruhingiz nechinchi Unitda belgilang?
+            `
+            await  bot.sendMessage( chatId, findTeacher?.language == 'uz' ? textHtmluz : textHtmlru,
+                {
+                   parse_mode :'HTML',
+                   reply_markup: {
+                     remove_keyboard: true,
+                     inline_keyboard : [
+                        [
+                            {
+                                text:`1`,
+                                callback_data : `unit_1_${e.id}`
+                    
+                            },
+                            {
+                                text:`2`,
+                                callback_data : `unit_2_${e.id}`
+                            },
+                            {
+                                text:`3`,
+                                callback_data : `unit_3_${e.id}`
+                    
+                            },
+                            {
+                                text:`4`,
+                                callback_data : `unit_4_${e.id}`
+                            },
+                         
+                          
+                        ],[
+
+                            {
+                                text:`5`,
+                                callback_data : `unit_5_${e.id}`
+                    
+                            },
+                            {
+                                text:`6`,
+                                callback_data : `unit_6_${e.id}`
+                            },
+                            {
+                                text:`7`,
+                                callback_data : `unit_7_${e.id}`
+                    
+                            },    {
+                                text:`8`,
+                                callback_data : `unit_8_${e.id}`
+                    
+                            },
+                        ],
+                        [
+                            {
+                                text:`9`,
+                                callback_data : `unit_9_${e.id}`
+                            },
+                            {
+                                text:`10`,
+                                callback_data : `unit_10_${e.id}`
+                    
+                            },
+                            {
+                                text:`11`,
+                                callback_data : `unit_11_${e.id}`
+                            },
+                            {
+                                text:`12`,
+                                callback_data : `unit_12_${e.id}`
+                    
+                            },
+                        ],
+                        [
+                            {
+                                text:`13`,
+                                callback_data : `unit_13_${e.id}`
+                            },
+                            {
+                                text:`14`,
+                                callback_data : `unit_14_${e.id}`
+                            },
+                          
+                        ]
+                    ]
+                   },
+                 });
+    }
+
+}
+
+const sentUnit  = async(query) => {
+    console.log('okkk');
+    console.log(query, 'log');
+    const { data } = query
+    const chatId = query.from.id 
+    const text = data
+    const messageId = query.message.message_id
+    const queryAnswer = text.split('_')
+    const splitText = queryAnswer[2]
+    const unitNumber = queryAnswer[1]
+    console.log(query);
+    const textHtml = query.message.text
+    console.log(textHtml);
+    const sheetReadUnits = await readSheets('Units','A:A')
+    const  writeRow = sheetReadUnits ? `A${sheetReadUnits?.length + 1}` : 'A1'
+    let dataToExcel = [
+        [  splitText,
+        unitNumber,
+            formatDate(new Date()),
+        ]
+    ]
+    await writeToSheet('Units' , writeRow, dataToExcel)
+
+    bot.editMessageText( textHtml , {
+        chat_id: chatId,
+        message_id : messageId,
+        parse_mode :'HTML',
+        reply_markup: {
+          inline_keyboard : [
+            [
+                {
+                    text: `${unitNumber}` ,
+                    callback_data : `not`
+                }
+            ]
+        ],
+        },
+      });
+  
+// }
+} 
+
+
+
 const findStudentsInGroup = async (query) => {
     console.log('okkk');
     console.log(query, 'log');
@@ -104,12 +253,12 @@ const findStudentsInGroup = async (query) => {
          await Teacher.findByIdAndUpdate(findTeacher._id,{action: `attendance_record&${findGroup?._id}`,startLesson: startLesson},{new:true})
      
      
-        await bot.sendMessage(chatId , `Yakunlash uchun "Yuborish" Tugmasini bosing` , {
+        await bot.sendMessage(chatId , findTeacher.language == 'uz' ? `Yakunlash uchun "Yuborish" Tugmasini bosing` :`Нажмите кнопку «Отправить», чтобы закончить` , {
              reply_markup: {
                  keyboard: [
                      [
                          {
-                             text: 'Yuborish'
+                             text: findTeacher.language == 'uz' ? 'Yuborish' : `Отправить`
                          }
                      ]
                  ] ,
@@ -129,6 +278,11 @@ const findStudentsInGroup = async (query) => {
             
             keyboard :[
                        ...keyboardGroups,
+                       [
+                        {
+                            text: findTeacher.language == 'uz' ? `Units` : `Units`,
+                        }
+                       ],
                        [
                         {
                             text: `Tilni o'zgartirish`,
@@ -497,6 +651,47 @@ const  sendExcelAttendanceRecords = async(msg) => {
     }
 
     await writeToSheet('attendanceRecords' , writeRow, data)
+    await Teacher.findByIdAndUpdate(findTeacher._id,{action: `menu`},{new:true})
+
+
+    const findGroupsOfTeacher = await Groups.find({teacher: findTeacher._id}).lean() 
+    const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher)
+    bot.sendMessage(chatId ,findTeacher.language == 'uz' ? `Yuborildi` : `Отправить` ,
+     {      reply_markup : {
+         
+         keyboard :[
+                    ...keyboardGroups,
+                    [
+                     {
+                         text: findTeacher.language == 'uz' ? `Units` : `Units`,
+                     }
+                    ],
+                    [
+                     {
+                         text: findTeacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
+                     }
+                    ]
+                  ],
+         resize_keyboard: true
+     }})
+      return    bot.sendMessage(chatId , `Menyuni tanlang` ,
+     {      reply_markup : {
+         
+         keyboard :[
+                    ...keyboardGroups,
+                    [
+                     {
+                         text: findTeacher.language == 'uz' ? `Units` : `Units`,
+                     }
+                    ],
+                    [
+                     {
+                         text: findTeacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
+                     }
+                    ]
+                  ],
+         resize_keyboard: true
+     }})
 }
 
 const writeMessage = async(msg) => {
@@ -539,34 +734,37 @@ await bot.deleteMessage(chatId, --message_id)
     Teacher.findByIdAndUpdate(findTeacherAdmin._id,{action: 'menu'},{new:true})
 }   
 
-const sendNotification = async() => {
-    // const findTeachers = await Teacher.find({}).lean()
-    const findGroups = await Groups.find({}).populate('teacher').lean()
-    console.log(findGroups,findGroups.length , 'FindGroups');
-    const FormatTime = formatTime(new Date())
-    for(let e of findGroups) {
-        console.log(e.time, FormatTime, e.time == FormatTime );
-        // console.log();
+// const sendNotification = async() => {
+//     // const findTeachers = await Teacher.find({}).lean()
+//     const findGroups = await Groups.find({}).populate('teacher').lean()
+//     console.log(findGroups,findGroups.length , 'FindGroups');
+//     const FormatTime = formatTime(new Date())
+//     for(let e of findGroups) {
+//         console.log(e.time, FormatTime, e.time == FormatTime );
+//         // console.log();
 
-        if(e.time == FormatTime) {
-            const text = e.teacher.language == 'uz' ?  `🤩Darsni boshlash vaqti keldi ! 
-✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
-` : `🤩Пришло время начать урок ! 
-✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
-`
-            bot.sendMessage(e.teacher.chatId, text , {
+//         if(e.time == FormatTime) {
+//             const text = e.teacher.language == 'uz' ?  `🤩Darsni boshlash vaqti keldi ! 
+// ✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
+// ` : `🤩Пришло время начать урок ! 
+// ✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
+// `
+//             bot.sendMessage(e.teacher.chatId, text , {
                 
-            })
-        }
-    }
-}
+//             })
+//         }
+//     }
+// }
 module.exports = {
     // confirmationLessons,
+    // confirmationLesson1,
+    groupUnits, 
     confirmationLesson,
     findStudentsInGroup,
     addAttendance,
     sendExcelAttendanceRecords,
     addAttendanceAdmin,
     writeMessage,
-    sendNotification
+    sentUnit,
+    // sendNotification
 }

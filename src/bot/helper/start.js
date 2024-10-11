@@ -21,6 +21,11 @@ console.log(findTeacher);
                        ...keyboardGroups,
                        [
                         {
+                            text: findTeacher.language == 'uz' ? `Units` : `Units`,
+                        }
+                       ],
+                       [
+                        {
                             text: findTeacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,
                         }
                        ]
@@ -135,6 +140,11 @@ console.log(teacher, 'lllll');
             
             keyboard :[
                        ...keyboardGroups,
+                       [
+                        {
+                            text: findTeacher.language == 'uz' ? `Units` : `Units`,
+                        }
+                       ],
                        [
                         {
                             text: teacher.language == 'uz' ? `🇷🇺/🇺🇿 Tilni o‘zgartirish` : `🇷🇺/🇺🇿 Сменить язык`,

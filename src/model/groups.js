@@ -1,6 +1,7 @@
 const {Schema, model} = require('mongoose')
 
 const Groups = new Schema({
+    sheet_id: String,
     level: String,
     room: String,
     time: String,

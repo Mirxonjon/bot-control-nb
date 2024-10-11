@@ -1,5 +1,6 @@
+const Teacher = require("../model/teachers");
 const { bot } = require("./bot");
-const { addAttendance, addAttendanceAdmin, findStudentsInGroup } = require("./helper/group");
+const { addAttendance, addAttendanceAdmin, findStudentsInGroup, sentUnit } = require("./helper/groups");
 
 bot.on('callback_query', async (query) => {
 
@@ -43,31 +44,14 @@ let textAnswer = 'Send'
         if(callbackName[0] == 'attAdmin'){
             addAttendanceAdmin(query)
         }
+        if(callbackName[0] == 'unit'){
+            sentUnit(query)
+        }
 
         if(callbackName[0] == 'confirmL') {
-        //   console.log(callbackName);
           await findStudentsInGroup(query)
-        //   console.log(callbackName[1]);
 
         }
-        // if(callbackName[0] == 'appliaction'){
-        //     answerApplication(query)
-        // }
-        // if(callbackName[0] == 'applicationChat') {
-        //     ApplicationChat(query)
-        // }
-        // if(callbackName[0] == 'positive') {
-        //     positiveAnswers(query)
-        // }
-        // if(callbackName[0] == 'rejected') {
-        //     rejectedAnswers(query)
-        // }
-        // if(callbackName[0] == 'answerAll') {
-        //     allAnswers(query)
-        // }
-          
-                
-
     }).catch(e => {
         console.log(e);
     })

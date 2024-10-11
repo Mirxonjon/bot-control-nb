@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const {CronJob} = require('cron')
 const  cron = require('cron')
 const {  updateAllTeachersData } = require('./src/utils/time')
-const { sendNotification } = require('./src/bot/helper/group')
+const { sendNotification } = require('./src/bot/helper/notification')
 
 const app = express()
 require('dotenv').config()
@@ -17,11 +17,13 @@ const job = new CronJob(
     // '0 59 * * * *' ,
 	async () => {
         // await updateAllTeachersData(); 
-        sendNotification()
+        // sendNotification()
       }, // onTick
 	null, // onComplete
 	true, // start
 	'Asia/Tashkent' // timeZone
+
+
 );
 // const dt = cron.sendAt('* * * * *');
 
@@ -36,7 +38,7 @@ async function dev() {
             console.log('server is runing' + process.env.PORT );
         })
     //    await sendNotification()
-    await updateAllTeachersData(); 
+    // await updateAllTeachersData(); 
         // await updateAllTeachersData(); 
     } catch (error) {
         console.log(error.message);

@@ -68,6 +68,8 @@ const userKeyboardRU = [
     ]
 ]
 
+
+
 const listTeachersInArray = async (teachers) => {
     let keyboardTeachers = [] 
 
@@ -80,6 +82,7 @@ const listTeachersInArray = async (teachers) => {
     return keyboardTeachers
 }
 const listGroupsInArray = async (groups) => {
+    console.log(groups);
     let keyboardTeachers = [] 
 
     for(let i  of groups) {
@@ -90,10 +93,23 @@ const listGroupsInArray = async (groups) => {
 
     return keyboardTeachers
 }
+const listGroups = async (groups) => {
+    // console.log(groups);
+    let keyboardTeachers = [] 
 
+    for(let i  of groups) {
+         keyboardTeachers.push({
+        text :`${i?.level} - ${i?.days} - ${i?.time} - ${i?.room}`,
+        id : i.sheet_id
+    })
+    }
+
+    return keyboardTeachers
+}
 
 
 module.exports = {
+    listGroups,
     adminKeyboardUZ,
     adminKeyboardRu,
     userKeyboardUz,

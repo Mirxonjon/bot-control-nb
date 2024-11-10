@@ -1,119 +1,118 @@
 const adminKeyboardUZ = [
-    [
-        {
-            text:'So‘rovnomalar'
-        },
-    ],
-    [
-        {
-            text:'Statistika'
-        },
-        
-        {
-            text:`Xabar yuborish`
-        },
-    ],
-    [
-        {
-            text : 'Grafik yuborish'
-        },
-        {
-            text:`🇷🇺/🇺🇿 Tilni o‘zgartirish`
-        }
-    ]
-]
+  [
+    {
+      text: "So‘rovnomalar",
+    },
+  ],
+  [
+    {
+      text: "Statistika",
+    },
+
+    {
+      text: `Xabar yuborish`,
+    },
+  ],
+  [
+    {
+      text: "Grafik yuborish",
+    },
+    {
+      text: `🇷🇺/🇺🇿 Tilni o‘zgartirish`,
+    },
+  ],
+];
 const adminKeyboardRu = [
-    [
-        {
-            text:'Запросы'
-        },
-    ],
-    [
-        {
-            text:'Статистика'
-        },
-        {
-            text:'Отправит сообшения'
-        },
-    ],
-    [
-        {
-            text : 'Отправит график'
-        },
-        {
-            text:`🇷🇺/🇺🇿 Сменить язык`
-        }
-    ]
-]
+  [
+    {
+      text: "Запросы",
+    },
+  ],
+  [
+    {
+      text: "Статистика",
+    },
+    {
+      text: "Отправит сообшения",
+    },
+  ],
+  [
+    {
+      text: "Отправит график",
+    },
+    {
+      text: `🇷🇺/🇺🇿 Сменить язык`,
+    },
+  ],
+];
 
 const userKeyboardUz = [
-    [
-        {
-            text:`So‘rovnoma qoldirish`
-        },
-        {
-            text:`🇷🇺/🇺🇿 Tilni o‘zgartirish`
-        }
-    ]
-]
+  [
+    {
+      text: `So‘rovnoma qoldirish`,
+    },
+    {
+      text: `🇷🇺/🇺🇿 Tilni o‘zgartirish`,
+    },
+  ],
+];
 
 const userKeyboardRU = [
-    [
-        {
-            text:`Оставить запрос`
-        },
-        {
-            text:`🇷🇺/🇺🇿 Сменить язык`
-        }
-    ]
-]
-
-
+  [
+    {
+      text: `Оставить запрос`,
+    },
+    {
+      text: `🇷🇺/🇺🇿 Сменить язык`,
+    },
+  ],
+];
 
 const listTeachersInArray = async (teachers) => {
-    let keyboardTeachers = [] 
+  let keyboardTeachers = [];
 
-    for(let i  of teachers) {
-         keyboardTeachers.push([{
-        text : i.full_name
-    }])
-    }
+  for (let i of teachers) {
+    keyboardTeachers.push([
+      {
+        text: i.full_name,
+      },
+    ]);
+  }
 
-    return keyboardTeachers
-}
+  return keyboardTeachers;
+};
 const listGroupsInArray = async (groups) => {
-    console.log(groups);
-    let keyboardTeachers = [] 
+  let keyboardTeachers = [];
 
-    for(let i  of groups) {
-         keyboardTeachers.push([{
-        text : `${i?.level} - ${i?.days} - ${i?.time} - ${i?.room}`
-    }])
-    }
+  for (let i of groups) {
+    keyboardTeachers.push([
+      {
+        text: `${i?.level} - ${i?.days} - ${i?.time} - ${i?.room}`,
+      },
+    ]);
+  }
 
-    return keyboardTeachers
-}
+  return keyboardTeachers;
+};
 const listGroups = async (groups) => {
-    // console.log(groups);
-    let keyboardTeachers = [] 
+  let keyboardTeachers = [];
 
-    for(let i  of groups) {
-         keyboardTeachers.push({
-        text :`${i?.level} - ${i?.days} - ${i?.time} - ${i?.room}`,
-        id : i.sheet_id
-    })
-    }
+  for (let i of groups) {
+    keyboardTeachers.push({
+      text: `${i?.level} - ${i?.days} - ${i?.time} - ${i?.room}`,
+      id: i.sheet_id,
+    });
+  }
 
-    return keyboardTeachers
-}
-
+  return keyboardTeachers;
+};
 
 module.exports = {
-    listGroups,
-    adminKeyboardUZ,
-    adminKeyboardRu,
-    userKeyboardUz,
-    userKeyboardRU,
-    listTeachersInArray,
-    listGroupsInArray
-}
+  listGroups,
+  adminKeyboardUZ,
+  adminKeyboardRu,
+  userKeyboardUz,
+  userKeyboardRU,
+  listTeachersInArray,
+  listGroupsInArray,
+};

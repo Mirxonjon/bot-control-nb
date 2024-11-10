@@ -8,7 +8,6 @@ bot.on('callback_query', async (query) => {
 
     const { data } = query;
     const findTeacher = await Teacher.findOne({chatId}).lean()
-    // let id = data.split('-');
     let callbackName = data.split('_');
 
 let textAnswer = 'Send'
@@ -32,7 +31,6 @@ let textAnswer = 'Send'
         }
     }
 
-    console.log(callbackName[0], callbackName[0] == 'confirmL');
     bot.answerCallbackQuery(query.id , {
         text : textAnswer,
         show_alert : false,

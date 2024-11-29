@@ -113,13 +113,12 @@ const updateAllTeachersData = async () => {
         if (findTeacher) {
           // const isAdmin = e[2] == "admin" ? true : false;
           if (e[1] == findTeacher.password) {
-            console.log(e[3], findTeacher._id, "idd");
             await Teachers.findByIdAndUpdate(
               findTeacher._id,
               {
                 password: e[1],
                 admin: e[2] == "admin" ? true : false,
-                username: e[3].toLowerCase(),
+                username: e[3]?.toLowerCase(),
                 updateAt: new Date(),
               },
               { new: true }
@@ -130,7 +129,7 @@ const updateAllTeachersData = async () => {
             sheet_id: e[1],
             full_name: e[0],
             password: e[1],
-            username: e[3].toLowerCase(),
+            username: e[3]?.toLowerCase(),
             admin: e[2] == "admin" ? true : false,
             createdAt: new Date(),
           });

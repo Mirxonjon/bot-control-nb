@@ -229,7 +229,7 @@ const findStudentsInGroup = async (query) => {
 🎓<b>${findTeacher.full_name}</b>
 <b>${queryAnswer[2]}</b>
 
-💼 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>boshlandi</b>
+💤 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>boshlandi</b>
 `;
     }
     // console.log(textHtmlForAdmin);
@@ -833,12 +833,12 @@ const sendExcelAttendanceRecords = async (msg) => {
   let confirmLessonTimeMinut = await getMinutTimes();
   let confirmDateFormat = minutToFormatTime(confirmLessonTimeMinut);
 
-  textHtmlForAdmin = `<b>#finished</b>
+  textHtmlForAdmin = `<b>#Premature</b>
       
 🎓<b>${findTeacher.full_name}</b>
 <b>${findGroup?.level} - ${findGroup?.days} - ${findGroup?.time} - ${findGroup?.room}</b>
 
-💼 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>tugadi</b>
+💤 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>tugadi</b>
 `;
   // console.log(textHtmlForAdmin);
   await bot.sendMessage(findAdmin.chatId, textHtmlForAdmin, {
@@ -918,7 +918,6 @@ const writeMessage = async (msg) => {
   const findTeacherAdmin = await Teacher.findOne({ chatId }).lean();
   const idAttendanceRecordAdmin = findTeacherAdmin.action.split("&")[1];
   let message_id = msg.message_id;
-
   const findAttendanceAdmin = await AttendanceRecordsAdmin.findOne({
     _id: idAttendanceRecordAdmin,
   })

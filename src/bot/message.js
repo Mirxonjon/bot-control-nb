@@ -30,7 +30,6 @@ bot.on("message", async (msg) => {
     logout(msg);
   }
 
-console.log(teacher);
 
   if (teacher && text != "/start" && text != "/logout") {
     if (teacher?.action?.split("&")[0] == "attendance_record") {
@@ -38,7 +37,7 @@ console.log(teacher);
         sendExcelAttendanceRecords(msg);
       }
     }
-    if (teacher?.action?.split("&")[0] == "write_resason") {
+    if (teacher?.action?.split("&")[0] == "write_reason") {
       writeMessage(msg);
     }
 

@@ -9,7 +9,6 @@ const {
 const { chooseNewLanguage, changeLanguage } = require("./helper/language");
 const {
   start,
-  chooseLanguage,
   logout,
   chooseTeacher,
   confirmPassword,
@@ -20,32 +19,26 @@ bot.on("message", async (msg) => {
   const text = msg.text;
 
   const teacher = await Teachers.findOne({ chatId }).lean();
-  const findNotAccess = await Teachers.findOne({
-    chatIdNotAccess: chatId,
-  }).lean();
+  // const findNotAccess = await Teachers.findOne({
+  //   chatIdNotAccess: chatId,
+  // }).lean();
   if (text == "/start" || text == "Menyu" || text == "Меню") {
     start(msg);
-  }
-  const Teacherfind = await Teachers.findOne({ full_name: text }).lean();
-  if (Teacherfind) {
-    chooseTeacher(msg);
   }
 
   if (text == "/logout") {
     logout(msg);
   }
 
-  if (findNotAccess) {
-    if (findNotAccess?.actionNotAccess == "confirm_password") {
-      confirmPassword(msg);
-    }
-  }
+console.log(teacher);
 
   if (teacher && text != "/start" && text != "/logout") {
     if (teacher?.action?.split("&")[0] == "attendance_record") {
-      sendExcelAttendanceRecords(msg);
+      if (text == "Darsni Yakunlash" || text == "Завершить урок") {
+        sendExcelAttendanceRecords(msg);
+      }
     }
-    if (teacher?.action?.split("&")[0] == "write_reason") {
+    if (teacher?.action?.split("&")[0] == "write_resason") {
       writeMessage(msg);
     }
 
@@ -58,6 +51,7 @@ bot.on("message", async (msg) => {
       text != `🇷🇺  Русский` &&
       text != `🇺🇿 O‘zbekcha`
     ) {
+      console.log('okk');
       confirmationLesson(msg);
     }
 

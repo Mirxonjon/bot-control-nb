@@ -13,9 +13,7 @@ const changeLanguage = async (msg) => {
 
   bot.sendMessage(
     chatId,
-    teacher.language == "uz"
-      ? `🇷🇺/🇺🇿 Tilni o‘zgartirish`
-      : `Выберите язык 🇷🇺/🇺🇿`,
+    teacher.language == "uz" ? `Tilni tanlang:` : `Выберите язык`,
     {
       reply_markup: {
         keyboard: [
@@ -50,7 +48,7 @@ const chooseNewLanguage = async (msg) => {
     const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher);
     bot.sendMessage(
       chatId,
-      teacher.language == "uz" ? `Menyuni tanlang` : `Выберите меню`,
+      teacher.language == "uz" ? `Menyuni tanlang:` : `Выберите меню:`,
       {
         reply_markup: {
           keyboard: [

@@ -5,6 +5,7 @@ const Teacher = new Schema({
   full_name: String,
   chatId: Number,
   phone: String,
+  username:String,
   password: String,
   admin: {
     type: Boolean,

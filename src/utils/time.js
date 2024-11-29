@@ -90,23 +90,36 @@ function formatTime(date) {
   return `${hours}:${minutes}`;
 }
 
+function getMinutTimes() {
+  const hozir = new Date(); // Hozirgi vaqtni oladi
+  const soat = hozir.getHours();
+  const minut = hozir.getMinutes();
+  return soat * 60 + minut;
+}
+
+function ConvertionTimeMinut(vaqt) {
+  const [soat, minut] = vaqt.split(":").map(Number);
+  return soat * 60 + minut;
+}
 const updateAllTeachersData = async () => {
-  const allTeachers = await readSheets("BOT", "P:R2");
+  const allTeachers = await readSheets("BOT", "P:S2");
   const allGroups = await readSheets("GROUPS", "A:G2");
   const allStudents = await readSheets("STUDENTS", "A:H2");
-
+  console.log(allTeachers);
   if (allTeachers?.length) {
     for (let e of allTeachers) {
       if (e.length) {
         let findTeacher = await Teachers.findOne({ sheet_id: e[1] }).lean();
         if (findTeacher) {
-          const isAdmin = e[2] == "admin" ? true : false;
-          if (e[1] != findTeacher.password || isAdmin != findTeacher.admin) {
+          // const isAdmin = e[2] == "admin" ? true : false;
+          if (e[1] == findTeacher.password) {
+            console.log(e[3], findTeacher._id, "idd");
             await Teachers.findByIdAndUpdate(
               findTeacher._id,
               {
                 password: e[1],
                 admin: e[2] == "admin" ? true : false,
+                username: e[3].toLowerCase(),
                 updateAt: new Date(),
               },
               { new: true }
@@ -117,6 +130,7 @@ const updateAllTeachersData = async () => {
             sheet_id: e[1],
             full_name: e[0],
             password: e[1],
+            username: e[3].toLowerCase(),
             admin: e[2] == "admin" ? true : false,
             createdAt: new Date(),
           });
@@ -127,7 +141,6 @@ const updateAllTeachersData = async () => {
     await findAndUpdateOrCreateGroups(allGroups, allStudents);
   } else {
   }
-
 };
 
 const findAndUpdateOrCreateStudents = async (allStudents) => {
@@ -202,6 +215,14 @@ const findAndUpdateOrCreateGroups = async (AllGroups, allStudents) => {
   await findAndUpdateOrCreateStudents(allStudents);
 };
 
+function minutToFormatTime(minut) {
+  const soat = Math.floor(minut / 60); // Minutni soatga aylantirish
+  const qolganMinut = minut % 60; // Qolgan minutlar
+  return `${soat.toString().padStart(2, "0")}:${qolganMinut
+    .toString()
+    .padStart(2, "0")}`;
+}
+
 module.exports = {
   jobTime,
   DaysUz,
@@ -212,4 +233,7 @@ module.exports = {
   InfoUserArr,
   Supervayzers,
   updateAllTeachersData,
+  getMinutTimes,
+  ConvertionTimeMinut,
+  minutToFormatTime,
 };

@@ -14,7 +14,23 @@ const sendNotification = async () => {
           : `🤩Пришло время начать урок ! 
 ✏️${e?.level} - ${e?.days} - ${e?.time} - ${e?.room} 
 `;
-      bot.sendMessage(e.teacher.chatId, text);
+      bot.sendMessage(e.teacher.chatId, text, {
+        reply_markup: {
+          remove_keyboard: true,
+          inline_keyboard: [
+            [
+              {
+                text: "✅",
+                callback_data: `confirmL_true_${text}`,
+              },
+              {
+                text: "❌",
+                callback_data: `confirmL_false_${text}`,
+              },
+            ],
+          ],
+        },
+      });
     }
   }
 };

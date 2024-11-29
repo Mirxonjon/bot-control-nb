@@ -5,10 +5,14 @@ const { listTeachersInArray, listGroupsInArray } = require("../menu/keyboard");
 
 const start = async (msg) => {
   const chatId = msg.from.id;
-  const findTeacher = await Teacher.findOne({ chatId: chatId });
+  const username = msg.from.username;
+  // console.log(msg);
+  const findTeacher = await Teacher.findOne({ username: username.toLowerCase() });
+  // console.log(findTeacher);
+
   if (findTeacher) {
     findTeacher.action = "menu";
-
+    findTeacher.chatId = chatId;
     await Teacher.findByIdAndUpdate(findTeacher._id, findTeacher, {
       new: true,
     });
@@ -17,41 +21,36 @@ const start = async (msg) => {
       teacher: findTeacher._id,
     }).lean();
     const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher);
-    return bot.sendMessage(chatId, `Menyuni tanlang`, {
-      reply_markup: {
-        keyboard: [
-          ...keyboardGroups,
-          [
-            {
-              text: findTeacher.language == "uz" ? `Units` : `Units`,
-            },
-          ],
-          [
-            {
-              text:
-                findTeacher.language == "uz"
-                  ? `🇷🇺/🇺🇿 Tilni o‘zgartirish`
-                  : `🇷🇺/🇺🇿 Сменить язык`,
-            },
-          ],
-        ],
-        resize_keyboard: true,
-      },
-    });
-  } else {
-    let teachers = await Teacher.find().lean();
-
-    let keyboardTeachers = await listTeachersInArray(teachers);
-
-    bot.sendMessage(
+    return bot.sendMessage(
       chatId,
-      `Assalomu aleykum ${msg.from.first_name} , Xodimni tanlang.`,
+      findTeacher.language == "uz" ? `Menyuni tanlang:` : `Выберите меню:`,
       {
         reply_markup: {
-          keyboard: keyboardTeachers,
+          keyboard: [
+            ...keyboardGroups,
+            findTeacher.admin ? []:
+            [
+              {
+                text: findTeacher.language == "uz" ? `Units` : `Units`,
+              },
+            ],
+            [
+              {
+                text:
+                  findTeacher.language == "uz"
+                    ? `🇷🇺/🇺🇿 Tilni o‘zgartirish`
+                    : `🇷🇺/🇺🇿 Сменить язык`,
+              },
+            ],
+          ],
           resize_keyboard: true,
         },
       }
+    );
+  } else {
+    bot.sendMessage(
+      chatId,
+      `Assalomu aleykum ${msg.from.first_name} , Siz hozirda Xodimlar ro'yhatida emasiz.`
     );
   }
 };

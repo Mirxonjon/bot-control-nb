@@ -5,7 +5,13 @@ const Students = require("../../model/students");
 const Teacher = require("../../model/teachers");
 const { bot } = require("../bot");
 const { writeToSheet, readSheets } = require("../../utils/google_cloud");
-const { formatDate, formatTime } = require("../../utils/time");
+const {
+  formatDate,
+  formatTime,
+  getMinutTimes,
+  ConvertionTimeMinut,
+  minutToFormatTime,
+} = require("../../utils/time");
 const { listGroupsInArray, listGroups } = require("../menu/keyboard");
 
 const confirmationLesson = async (msg) => {
@@ -18,12 +24,14 @@ const confirmationLesson = async (msg) => {
     teacher: findTeacher._id,
   }).lean();
   const keyboardGroups = await listGroups(findGroupsOfTeacher);
-  const textHtmlru = `<b> ${text} </b>
-Вы уверены что хотите начать урок?
+  const textHtmluz = `Haqiqatdan ham ushbu guruhda darsni <b>boshlamoqchimisiz?🤩 </b>
+
+<b> ${text} </b>
     `;
-  const textHtmluz = `<b> ${text} </b>
-Haqiqatan ham darsni boshlamoqchimisiz?
-    `;
+  const textHtmlru = `Вы уверены что хотите <b>начать урок?🤩</b>
+
+<b> ${text} </b>
+`;
 
   let findGroup = keyboardGroups.find((e) => e.text == text);
   if (findGroup) {
@@ -59,14 +67,16 @@ const groupUnits = async (msg) => {
   const findTeacher = await Teacher.findOne({ chatId }).lean();
   const groups = await Groups.find({ teacher: findTeacher._id }).lean();
   const AllTeacherGroups = await listGroups(groups);
-
+  let texthtmlForUnitUZ = `<b>Guruhlaringizdagi unitlarni belgilang. 🙃</b>`;
+  let texthtmlForUnitRU = `<b>Определите unit в своих группах. 🙃</b>`;
+  await bot.sendMessage(
+    chatId,
+    findTeacher?.language == "uz" ? texthtmlForUnitUZ : texthtmlForUnitRU,
+    { parse_mode: "HTML" }
+  );
   for (let e of AllTeacherGroups) {
-    const textHtmlru = `<b> ${e.text} </b>
-        Вы уверены что хотите начать урок?
-            `;
-    const textHtmluz = `<b> ${e.text} </b>
-        Guruhingiz nechinchi Unitda belgilang?
-            `;
+    const textHtmlru = `<b> ${e.text} </b>`;
+    const textHtmluz = `<b> ${e.text} </b>`;
     await bot.sendMessage(
       chatId,
       findTeacher?.language == "uz" ? textHtmluz : textHtmlru,
@@ -154,7 +164,7 @@ const sentUnit = async (query) => {
   const queryAnswer = text.split("_");
   const splitText = queryAnswer[2];
   const unitNumber = queryAnswer[1];
-  const textHtml = query.message.text;
+  const textHtml = `<b>${query.message.text}</b>`;
   const sheetReadUnits = await readSheets("Units", "A:A");
   const writeRow = sheetReadUnits ? `A${sheetReadUnits?.length + 1}` : "A1";
   let dataToExcel = [[splitText, unitNumber, formatDate(new Date())]];
@@ -198,15 +208,56 @@ const findStudentsInGroup = async (query) => {
       teacher: findTeacher._id,
     }).lean();
     const findStudents = await Students.find({ group: findGroup?._id }).lean();
+    const findAdmin = await Teacher.findOne({ admin: "true" }).lean();
+    let textHtmlForAdmin = ``;
+    let startLessonTimeMinut = await ConvertionTimeMinut(splitText[2]);
+    let confirmLessonTimeMinut = await getMinutTimes();
+    let confirmDateFormat = minutToFormatTime(confirmLessonTimeMinut);
+
+    if (startLessonTimeMinut > confirmLessonTimeMinut) {
+      textHtmlForAdmin = `<b>#OnTime</b>
+
+🎓<b>${findTeacher.full_name}</b>
+<b>${splitText}</b>
+
+💼 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>boshlandi</b>
+`;
+    }
+    if (startLessonTimeMinut < confirmLessonTimeMinut) {
+      textHtmlForAdmin = `<b>#Late</b>
+
+🎓<b>${findTeacher.full_name}</b>
+<b>${queryAnswer[2]}</b>
+
+💼 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>boshlandi</b>
+`;
+    }
+    // console.log(textHtmlForAdmin);
+    await bot.sendMessage(findAdmin.chatId, textHtmlForAdmin, {
+      parse_mode: "HTML",
+      reply_markup: {},
+    });
     const startLesson = new Date();
     await bot.deleteMessage(chatId, +messageId);
+    const statuses = {
+      left: "⬜️ <b>LEFT</b>",
+      attend: "🟦 <b>ATTEND</b>",
+      active: "🟩 <b>ACTIVE</b>",
+      debtor: "🟥 <b>DEBTOR</b>",
+      frozen: "🥶 <b>FROZEN</b>",
+    };
     for (let e of findStudents) {
-      let textHtml = `<b>👤 ${e?.full_name}</b> - <b>${e.age}</b>
- 📞 <i>${e?.number}</i> 
- 📞 <i>${e?.number_second}</i>
+      let textHtml = `<b>👤 ${e?.full_name}</b><b>${e?.age ? " -" : ""} ${
+        e?.age
+      }</b>
+${statuses[e?.type?.toLowerCase()]}  ${e?.attemt_day ? "🗓" : ""} <i>${
+        e?.attemt_day
+      }</i>
 
- ${e?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${e?.type}</b>  🗓<i>${e?.attemt_day}</i>
-             `;
+${e?.number || e?.number_second ? "📞 " : ""}<i>${e?.number}</i> ${
+        e?.number_second && e?.number ? "|" : ""
+      } <i>${e?.number_second}</i>
+`;
 
       await bot.sendMessage(chatId, textHtml, {
         parse_mode: "HTML",
@@ -249,14 +300,17 @@ const findStudentsInGroup = async (query) => {
     await bot.sendMessage(
       chatId,
       findTeacher.language == "uz"
-        ? `Yakunlash uchun "Yuborish" Tugmasini bosing`
-        : `Нажмите кнопку «Отправить», чтобы закончить`,
+        ? `Darsni yakunlaganingizdan so'ng "Darsni Yakunlash" tugmasini bosing! 😴`
+        : `Когда вы закончите урок, нажмите кнопку «Завершить урок»! 😴`,
       {
         reply_markup: {
           keyboard: [
             [
               {
-                text: findTeacher.language == "uz" ? "Yuborish" : `Отправить`,
+                text:
+                  findTeacher.language == "uz"
+                    ? "Darsni Yakunlash"
+                    : `Завершить урок`,
               },
             ],
           ],
@@ -275,24 +329,29 @@ const findStudentsInGroup = async (query) => {
       teacher: findTeacher._id,
     }).lean();
     const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher);
-    bot.sendMessage(chatId, `Menyuni tanlang`, {
-      reply_markup: {
-        keyboard: [
-          ...keyboardGroups,
-          [
-            {
-              text: findTeacher.language == "uz" ? `Units` : `Units`,
-            },
+    bot.sendMessage(
+      chatId,
+      findTeacher.language == "uz" ? `Menyuni tanlang:` : `Выберите меню:`,
+      {
+        reply_markup: {
+          keyboard: [
+            ...keyboardGroups,
+            [
+              {
+                text: findTeacher.language == "uz" ? `Units` : `Units`,
+              },
+            ],
+            [
+              {
+                text: `Tilni o'zgartirish`,
+              },
+            ],
           ],
-          [
-            {
-              text: `Tilni o'zgartirish`,
-            },
-          ],
-        ],
-        resize_keyboard: true,
-      },
-    });
+          resize_keyboard: true,
+        },
+      }
+    );
+    bot.deleteMessage(chatId, messageId);
   }
 };
 
@@ -315,6 +374,13 @@ const addAttendance = async (query) => {
     .populate("teacher")
     .lean();
 
+  const statuses = {
+    left: "⬜️ <b>LEFT</b>",
+    attend: "🟦 <b>ATTEND</b>",
+    active: "🟩 <b>ACTIVE</b>",
+    debtor: "🟥 <b>DEBTOR</b>",
+    frozen: "🥶 <b>FROZEN</b>",
+  };
   if (findAttendance) {
     if (typeTeacher == "absent") {
       await AttendanceRecords.findByIdAndUpdate(
@@ -322,14 +388,28 @@ const addAttendance = async (query) => {
         { typeTeacher: typeTeacher, updateAt: new Date() },
         { new: true }
       );
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent?.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
-                        `;
+      //       let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
+      //         findStudent?.age
+      //       }</b>
+      // 📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
+      // ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
+      //         findStudent?.type
+      //       }</b>  🗓<i>${findStudent?.attemt_day}</i>
+      //                         `;
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
+      console.log("absend");
       await bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -353,14 +433,19 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
         { new: true }
       );
 
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent?.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
-                                `;
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
       bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -388,14 +473,19 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
     });
     const result = await newAttendance.save();
     if (typeTeacher == "attend") {
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent?.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
-                    `;
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
       bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -412,14 +502,19 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
         },
       });
     } else if (typeTeacher == "frozen") {
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
-                    `;
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
       bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -437,23 +532,35 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
       });
     } else if (typeTeacher == "absent") {
       const findAdmin = await Teacher.findOne({ admin: "true" }).lean();
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
-                    `;
-      let textHtmlForAdmin = `<b>👤 ${findTeacher?.full_name}</b>
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
+      let textHtmlForAdmin = `<b>🎓 ${findTeacher?.full_name}</b>
 <b>${findGroup.level} - ${findGroup.days} - ${findGroup.time} - ${
         findGroup.room
       }</b>
-<b>👤 ${findStudent?.full_name}</b> - <b>${findStudent.age}</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>
+
+<b>👤 ${findStudent?.full_name}</b><b>${findStudent?.age ? " -" : ""} ${
+        findStudent?.age
+      }</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<a>${
+        findStudent?.number
+      }</a> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
                                 `;
       await bot.editMessageText(textHtml, {
         chat_id: chatId,
@@ -504,6 +611,10 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
                     text: "📵",
                     callback_data: `attAdmin_Didn'tCall_${resultAdmin._id}`,
                   },
+                  // {
+                  //   text: "edit",
+                  //   callback_data: `edit_${resultAdmin._id}`,
+                  // },
                 ],
               ],
             },
@@ -512,13 +623,19 @@ ${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
       }
     }
     if (typeTeacher == "late") {
-      let textHtml = `<b>👤 ${findStudent?.full_name}</b> - <b>${
-        findStudent.age
-      }</b>
-📞 <i>${findStudent?.number}</i> | <i>${findStudent?.number_second}</i>
-${findStudent?.type == "ACTIVE" ? "🟩" : "🟥"}<b>${
-        findStudent?.type
-      }</b>  🗓<i>${findStudent?.attemt_day}</i>`;
+      let textHtml = `<b>👤 ${findStudent?.full_name}</b><b>${
+        findStudent?.age ? " -" : ""
+      } ${findStudent?.age}</b>
+${statuses[findStudent?.type?.toLowerCase()]}  ${
+        findStudent?.attemt_day ? "🗓" : ""
+      } <i>${findStudent?.attemt_day}</i>
+
+${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
+        findStudent?.number
+      }</i> ${
+        findStudent?.number_second && findStudent?.number ? "|" : ""
+      } <i>${findStudent?.number_second}</i>
+`;
       bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -710,6 +827,25 @@ const sendExcelAttendanceRecords = async (msg) => {
     await AttendanceRecords.findByIdAndDelete(e._id);
   }
 
+  const findAdmin = await Teacher.findOne({ admin: "true" }).lean();
+
+  // let startLessonTimeMinut = await ConvertionTimeMinut(splitText[2]);
+  let confirmLessonTimeMinut = await getMinutTimes();
+  let confirmDateFormat = minutToFormatTime(confirmLessonTimeMinut);
+
+  textHtmlForAdmin = `<b>#finished</b>
+      
+🎓<b>${findTeacher.full_name}</b>
+<b>${findGroup?.level} - ${findGroup?.days} - ${findGroup?.time} - ${findGroup?.room}</b>
+
+💼 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>tugadi</b>
+`;
+  // console.log(textHtmlForAdmin);
+  await bot.sendMessage(findAdmin.chatId, textHtmlForAdmin, {
+    parse_mode: "HTML",
+    reply_markup: {},
+  });
+
   await writeToSheet("attendanceRecords", writeRow, data);
   await Teacher.findByIdAndUpdate(
     findTeacher._id,
@@ -723,7 +859,35 @@ const sendExcelAttendanceRecords = async (msg) => {
   const keyboardGroups = await listGroupsInArray(findGroupsOfTeacher);
   bot.sendMessage(
     chatId,
-    findTeacher.language == "uz" ? `Yuborildi` : `Отправить`,
+    findTeacher.language == "uz"
+      ? `Dars soat <b>${formatDate(endLesson).split(" ")[1]}</b> yakunlandi.`
+      : `Урок закончился в <b>${formatDate(endLesson)}</b>.`,
+    {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ...keyboardGroups,
+          [
+            {
+              text: findTeacher.language == "uz" ? `Units` : `Units`,
+            },
+          ],
+          [
+            {
+              text:
+                findTeacher.language == "uz"
+                  ? `🇷🇺/🇺🇿 Tilni o‘zgartirish`
+                  : `🇷🇺/🇺🇿 Сменить язык`,
+            },
+          ],
+        ],
+        resize_keyboard: true,
+      },
+    }
+  );
+  return bot.sendMessage(
+    chatId,
+    findTeacher.language == "uz" ? `Menyuni tanlang:` : `Выберите меню:`,
     {
       reply_markup: {
         keyboard: [
@@ -746,27 +910,6 @@ const sendExcelAttendanceRecords = async (msg) => {
       },
     }
   );
-  return bot.sendMessage(chatId, `Menyuni tanlang`, {
-    reply_markup: {
-      keyboard: [
-        ...keyboardGroups,
-        [
-          {
-            text: findTeacher.language == "uz" ? `Units` : `Units`,
-          },
-        ],
-        [
-          {
-            text:
-              findTeacher.language == "uz"
-                ? `🇷🇺/🇺🇿 Tilni o‘zgartirish`
-                : `🇷🇺/🇺🇿 Сменить язык`,
-          },
-        ],
-      ],
-      resize_keyboard: true,
-    },
-  });
 };
 
 const writeMessage = async (msg) => {

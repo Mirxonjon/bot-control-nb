@@ -53,11 +53,13 @@ const chooseNewLanguage = async (msg) => {
         reply_markup: {
           keyboard: [
             ...keyboardGroups,
-            [
-              {
-                text: teacher.language == "uz" ? `Units` : `Units`,
-              },
-            ],
+            teacher.admin
+              ? []
+              : [
+                  {
+                    text: findTeacher.language == "uz" ? `Units` : `Units`,
+                  },
+                ],
             [
               {
                 text:

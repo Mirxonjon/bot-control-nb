@@ -43,7 +43,7 @@ async function dev() {
       .catch((error) => console.log(error.message));
 
     app.listen(process.env.PORT, () => {
-      console.log("server is runing" + process.env.PORT);
+      console.log("server is runing " + process.env.PORT);
     });
     //    await sendNotification()
     await updateAllTeachersData();

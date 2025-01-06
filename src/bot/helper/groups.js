@@ -232,7 +232,6 @@ const findStudentsInGroup = async (query) => {
 💤 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>boshlandi</b>
 `;
     }
-    // console.log(textHtmlForAdmin);
     await bot.sendMessage(findAdmin.chatId, textHtmlForAdmin, {
       parse_mode: "HTML",
       reply_markup: {},
@@ -409,7 +408,6 @@ ${findStudent?.number || findStudent?.number_second ? "📞 " : ""}<i>${
         findStudent?.number_second && findStudent?.number ? "|" : ""
       } <i>${findStudent?.number_second}</i>
 `;
-      console.log("absend");
       await bot.editMessageText(textHtml, {
         chat_id: chatId,
         message_id,
@@ -840,7 +838,6 @@ const sendExcelAttendanceRecords = async (msg) => {
 
 💤 <b>Dars soat</b> <b>${confirmDateFormat}</b> <b>tugadi</b>
 `;
-  // console.log(textHtmlForAdmin);
   await bot.sendMessage(findAdmin.chatId, textHtmlForAdmin, {
     parse_mode: "HTML",
     reply_markup: {},

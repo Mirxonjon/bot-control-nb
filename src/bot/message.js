@@ -50,7 +50,6 @@ bot.on("message", async (msg) => {
       text != `🇷🇺  Русский` &&
       text != `🇺🇿 O‘zbekcha`
     ) {
-      console.log('okk');
       confirmationLesson(msg);
     }
 

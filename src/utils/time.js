@@ -169,7 +169,7 @@ const findAndUpdateOrCreateStudents = async (allStudents) => {
         }
       } else {
         let findGroup = await Groups.findOne({ sheet_id: e[0] }).lean();
-
+console.log(findGroup);
         let newStudent = new Students({
           sheet_id: e[1],
           full_name: e[2],
@@ -178,7 +178,7 @@ const findAndUpdateOrCreateStudents = async (allStudents) => {
           number_second: e[5],
           attemt_day: e[6],
           type: e[7],
-          group: findGroup._id,
+          group: findGroup?._id,
           createdAt: new Date(),
         });
         await newStudent.save();
@@ -189,26 +189,28 @@ const findAndUpdateOrCreateStudents = async (allStudents) => {
 
 const findAndUpdateOrCreateGroups = async (AllGroups, allStudents) => {
   for (let e of AllGroups) {
-    let findGroup = await Groups.findOne({ sheet_id: e[0] }).lean();
-    if (findGroup) {
-      await Groups.findByIdAndUpdate(
-        findGroup._id,
-        { level: e[2], room: e[3], time: e[4], days: e[5] },
-        { new: true }
-      );
-    } else {
-      let findTeacher = await Teachers.findOne({ sheet_id: e[1] }).lean();
+    if (e[0]) {
+      let findGroup = await Groups.findOne({ sheet_id: e[0] }).lean();
+      if (findGroup) {
+        await Groups.findByIdAndUpdate(
+          findGroup._id,
+          { level: e[2], room: e[3], time: e[4], days: e[5] },
+          { new: true }
+        );
+      } else {
+        let findTeacher = await Teachers.findOne({ sheet_id: e[1] }).lean();
 
-      let newGoup = new Groups({
-        sheet_id: e[0],
-        level: e[2],
-        room: e[3],
-        time: e[4],
-        days: e[5],
-        teacher: findTeacher._id,
-        createdAt: new Date(),
-      });
-      await newGoup.save();
+        let newGoup = new Groups({
+          sheet_id: e[0],
+          level: e[2],
+          room: e[3],
+          time: e[4],
+          days: e[5],
+          teacher: findTeacher._id,
+          createdAt: new Date(),
+        });
+        await newGoup.save();
+      }
     }
   }
   await findAndUpdateOrCreateStudents(allStudents);

@@ -6,9 +6,8 @@ const { listTeachersInArray, listGroupsInArray } = require("../menu/keyboard");
 const start = async (msg) => {
   const chatId = msg.from.id;
   const username = msg.from.username;
-  // console.log(msg);
   const findTeacher = await Teacher.findOne({ username: username.toLowerCase() });
-  // console.log(findTeacher);
+
 
   if (findTeacher) {
     findTeacher.action = "menu";
